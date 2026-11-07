@@ -10,6 +10,7 @@ import (
 	"os"
 	"syscall"
 	"time"
+	"math/rand/v2"
 
 	"github.com/hashicorp/go-msgpack/codec"
 )
@@ -43,7 +44,11 @@ func AddrToID(addr string, length int) string {
 // randomTimeout uses time.After to create a timeout between minTimeout and 2x that.
 func randomTimeout(minTimeout time.Duration) <-chan time.Time {
 	// TODO: Students should implement this method
-	return nil
+
+	min, max := minTimeout, minTimeout * 2
+	randomInt := time.Duration(rand.Int64N(int64(max-min)+1)) + min
+
+	return time.After(randomInt)
 }
 
 // createCacheID creates a unique ID to store a client request and corresponding
