@@ -1,0 +1,4 @@
+raftlogs/
+tests/
+*/cover.out
+*.log
