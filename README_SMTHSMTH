@@ -1,0 +1,155 @@
+# Local Testing for Raft
+
+Run autograder tests directly on your Linux machine using this release Docker container
+
+## Project Structure
+
+```
+
+├── autograder-source
+│   ├── autograder                      # Autograder Python module
+│   └── raft                            # Autograder source
+│       ├── source                      # Autograder source
+│       │   ├── autograder              # Python module copied into autograder source
+│       │   │   └── __pycache__
+│       │   ├── resources               # Test cases that will be ran against
+│       │   │   └── studtest            # Name of cur test mode `studtest`, don't change it
+│       │   │       └── test            # Test cases
+|       │   ├── rubric_list_studtest.yaml    # Test scoring rubric
+|       │   ├── run_autograder_local.sh      # Main runner script
+|       │   ├── run_tests_local.py           # Python orchestrator
+│       │   └── tests
+│       └── submission                  # where your implementation should be copied to
+│       └── Makefile                    # entrypoint of autograder, using `make test` or `make studtest`
+└── raft-main                           # Released starting template
+```
+
+## Env Spec (installed in this container)
+
+- **Go 1.13**: 
+- **Python 3** 
+- **Bash**
+
+## Usage
+
+```bash
+cd autograder-source/raft/
+```
+
+### 1. One-time setup:
+
+```bash
+make setup
+```
+
+This installs Python dependencies (PyYAML) and gocovmerge.
+
+### 2. Run tests:
+
+Be sure to copy your implementation into `/autograder-source/raft/submission`
+
+```bash
+make test
+```
+
+or:
+
+```bash
+make studtest
+```
+
+### 3. Cleaning Up
+
+```bash
+make clean
+```
+
+### 4. Add your tests
+
+To add your own test cases to the autograder:
+
+1. **Add test files** to `source/resources/studtest/test/`:
+   ```bash
+   # Example: Add a new test file
+   cp my_custom_test.go source/resources/studtest/test/
+   ```
+
+2. **Update the test script** in `source/tests/test_studtest.sh`:
+   ```bash
+   # Add your test to the script
+   echo "Running MyCustomTest..."
+   go test -timeout 60s -v -run "^MyCustomTest$" 2>&1 | tee log/MyCustomTest.log
+   if [ ${PIPESTATUS[0]} -eq 0 ]; then
+       echo "TEST ^MyCustomTest$ PASS"
+   else
+       echo "TEST ^MyCustomTest$ FAIL"
+   fi
+   ```
+
+3. **Update the rubric** in `source/rubric_list_studtest.yaml`:
+   ```yaml
+   max_score: 100
+   tests:
+     ^MyCustomTest$: 10  # Points for your test
+   ```
+
+4. **Run your tests**:
+   ```bash
+   make clean && make test
+   ```
+
+### 5. Change Go timeout limit
+
+To adjust test timeouts for different test cases:
+
+**Edit the test script** `source/tests/test_studtest.sh`:
+   ```bash
+   # For quick tests (default)
+   go test -timeout 60s -v -run "^TestStudentInit$"
+   
+   # For complex tests (increase timeout)
+   go test -timeout 300s -v -run "^TestAppendEntriesRequest$"
+   
+   # For stress tests (very long timeout)
+   go test -timeout 600s -v -run "^TestRequestVotes$"
+   
+   # No timeout (not recommended)
+   go test -timeout 0 -v -run "^TestInfiniteLoop$"
+   ```
+
+### 6. Debugging Tests
+
+**Run individual tests**:
+```bash
+cd submission/test
+go test -timeout 300s -v -run "^TestStudentInit$"
+go test -timeout 300s -v -run "^TestAppendEntriesRequest/Follower$"
+```
+
+**Check test logs**:
+```bash
+# View detailed logs
+cat submission/test/log/TestStudentInit.log
+cat submission/test/log/TestAppendEntriesRequest.log
+```
+
+**Run with verbose output**:
+```bash
+go test -timeout 300s -v -run "^TestStudentInit$" 2>&1 | tee debug.log
+```
+
+
+## Test Workflow
+
+```
+make test
+    ↓
+run_autograder_local.sh
+    ↓
+run_tests_local.py (Python)
+    ↓
+test_studtest_local.sh (Bash)
+    ↓
+Executes Go tests from rubric_list_studtest.yaml
+    ↓
+results/results.json

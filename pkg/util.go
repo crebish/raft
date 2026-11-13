@@ -10,7 +10,7 @@ import (
 	"os"
 	"syscall"
 	"time"
-	"math/rand/v2"
+	"math/rand"
 
 	"github.com/hashicorp/go-msgpack/codec"
 )
@@ -46,7 +46,7 @@ func randomTimeout(minTimeout time.Duration) <-chan time.Time {
 	// TODO: Students should implement this method
 
 	min, max := minTimeout, minTimeout * 2
-	randomInt := time.Duration(rand.Int64N(int64(max-min)+1)) + min
+	randomInt := time.Duration(rand.Int63n(int64(max-min)+1)) + min
 
 	return time.After(randomInt)
 }
